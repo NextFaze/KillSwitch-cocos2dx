@@ -28,7 +28,7 @@ First clone/download/add as a submodule to your current project.
 In your main AppActivity.java file
     
     // Import the KillSwitch class
-    import com.nextfaze.KillSwitch
+    import com.nextfaze.KillSwitch;
     
     ...
     
@@ -61,7 +61,8 @@ Add the required C++ files to Android.mk
 
 Add the project reference to the KillSwitch JAR in project.properties
 
-    android.library.reference.1=../KillSwitch/proj.android
+    android.library.reference.1=../cocos2d/cocos/platform/android/java
+    android.library.reference.2=../KillSwitch/proj.android
 
 Add the JAR to build.xml
 
