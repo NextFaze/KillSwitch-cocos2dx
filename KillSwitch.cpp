@@ -357,11 +357,7 @@ void KillSwitch::parseConfig()
         
         if(appUpdateLink.IsString())
         {
-#if defined(COCOS2D_DEBUG) && (COCOS2D_DEBUG > 0)
-            m_sAppUpdateLink = "itms-apps://itunes.apple.com/app/id555523050";//appUpdateLink.GetString();
-#else
-            m_sAppUpdateLink = appUpdateLink.GetString();
-#endif
+			m_sAppUpdateLink = appUpdateLink.GetString();
         }
         
         if(appVersionCurrent.IsString())
