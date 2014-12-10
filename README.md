@@ -50,14 +50,14 @@ Add the required C++ files to Android.mk
                    ...
                    
                    ../../KillSwitch/KillSwitch.cpp \
-                   ../../KillSwitch/KillSwitch-android.cpp) \
+                   ../../KillSwitch/KillSwitch-android.cpp \
                    ../../KillSwitch/ModalLayer.cpp
 
 	LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes \
 	
 						...
 	
-						$(LOCAL_PATH)/../../KillSwitch \
+						$(LOCAL_PATH)/../../KillSwitch 
 
 Add the project reference to the KillSwitch JAR in project.properties
 
