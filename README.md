@@ -27,8 +27,11 @@ First clone/download/add as a submodule to your current project.
 ### Android
 In your main AppActivity.java file
     
+	import org.cocos2dx.lib.Cocos2dxActivity;
+	import android.os.Bundle;
+	
     // Import the KillSwitch class
-    import com.nextfaze.KillSwitch;
+	import com.nextfaze.KillSwitch;
     
     ...
     
@@ -41,6 +44,12 @@ In your main AppActivity.java file
         
         ...
     }
+
+Change the APP_STL define from gnustl_static in Application.mk
+
+    APP_STL := c++_static
+
+	APP_CPPFLAGS := -frtti -DCC_ENABLE_CHIPMUNK_INTEGRATION=1 -std=c++11 -fsigned-char
     
 Add the required C++ files to Android.mk
 
@@ -69,6 +78,7 @@ Add the JAR to build.xml
     <target name="-pre-compile">
     	<!-- Redefine project.all.jars.path before -compile executes -->
      	<path id="project.all.jars.path">
+            <fileset file="../cocos2d/cocos/platform/android/java/bin/classes.jar" />
 			<fileset file="../KillSwitch/proj.android/bin/classes.jar" />
       	</path>   
 	</target>
