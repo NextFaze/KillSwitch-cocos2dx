@@ -2,7 +2,6 @@
 
 Remote configuration and control for iOS and Android apps built with Cocos2D-X.
 
-
 ## How to include into project
 
 First clone/download/add as a submodule to your current project.
@@ -105,5 +104,12 @@ Add the KillSwitch resources folder to the projects build-cfg.json file
 
 ## Usage
 
-TBD
-    
+### Sample JSON Config file
+
+	{
+	"maintenanceMode": false,
+	"maintenanceMessage": "App is currently in maintenance, please come back later",
+	"appUpdateLink": "https://example.com/getApp",
+	"appVersionCurrent": "1",
+	"appVersionMin": "1"
+	}
