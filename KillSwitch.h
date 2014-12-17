@@ -19,6 +19,11 @@
 class KillSwitch
 {
 public:
+    
+    int getBuildNumber();
+    std::string getVersionNumber();
+    std::string getAppName();
+    
     ~KillSwitch();
     
     static KillSwitch& getInstance()
@@ -28,11 +33,8 @@ public:
         return instance;
     }
     
-    void loadConfig(const std::string& p_sConfigURL);
-    
-    int getBuildNumber();
-    std::string getVersionNumber();
-    std::string getAppName();
+    void loadConfig(const std::string& p_sConfigURL, const std::function<void()> &p_successFunction = nullptr);
+    void hideMessageLayer();
     
 private:
     rapidjson::Document m_jsonConfig;
@@ -41,13 +43,16 @@ private:
     std::string m_sAppUpdateLink;
     std::string m_sMaintenanceMessage;
     
+    std::function<void()> m_successFunction;
+    
     int         m_iAppVersionCurrent;
     int         m_iAppVersionMin;
     
     bool        m_bMaintenanceMode;
     bool        m_bConfigLoading;
     
-    ModalLayer  *   m_pMessageLayer;
+    ModalLayer          *   m_pMessageLayer;
+    cocos2d::ui::Button *   m_pUpdateButton;
     
     KillSwitch();
     // Dont forget to declare these two. You want to make sure they
@@ -62,7 +67,8 @@ private:
     void flipKillSwitch();
     
     void createMessageLayer();
-    void showMessage(const std::string& p_sMessage);
+    void showMessage(const std::string& p_sMessage, bool p_bShowUpdate = false);
+    cocos2d::Sequence * getHideAction();
     
     void onHttpRequestCompleted(cocos2d::network::HttpClient *sender, cocos2d::network::HttpResponse *response);
     void onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::TouchEventType type);

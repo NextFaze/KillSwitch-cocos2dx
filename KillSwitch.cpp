@@ -35,15 +35,18 @@ KillSwitch::KillSwitch()
     m_iAppVersionMin    = 0;
     
     m_pMessageLayer = NULL;
+    
+    m_successFunction = nullptr;
 }
 
 KillSwitch::~KillSwitch()
 {
 }
 
-void KillSwitch::loadConfig(const std::string &p_sConfigURL)
+void KillSwitch::loadConfig(const std::string &p_sConfigURL, const std::function<void()> &p_successFunction)
 {
     m_sConfigURL = p_sConfigURL;
+    m_successFunction = p_successFunction;
     
     downloadConfig();
 }
@@ -94,12 +97,12 @@ void KillSwitch::checkConfig()
 {
     int appCurrentBuild = getBuildNumber();
     std::string message = "";
+    bool isUpdateAvailable = !m_bMaintenanceMode && appCurrentBuild < m_iAppVersionCurrent;
     
-    if(!m_bMaintenanceMode && appCurrentBuild < m_iAppVersionCurrent)
+    if(isUpdateAvailable)
     {
         CCLOG("App is less than current, but still valid");
         message = "There is a new update for " + getAppName();
-        //return;
     }
 
     if(m_bMaintenanceMode)
@@ -128,7 +131,7 @@ void KillSwitch::checkConfig()
     CCLOG("%s", messageStream.str().c_str());
     
     if(message.length() > 0)
-        showMessage(message);
+        showMessage(message, isUpdateAvailable);
     else
         onButtonPress(nullptr, cocos2d::ui::Widget::TouchEventType::ENDED);
 }
@@ -190,6 +193,22 @@ void KillSwitch::createMessageLayer()
     
     messageBox->addChild(okButton);
     
+    m_pUpdateButton = Button::create();
+    m_pUpdateButton->loadTextures("MessageButton.png", "MessageButton_pressed.png", "MessageButton_disabled.png");
+    m_pUpdateButton->setTitleFontName("GeosansLight.ttf");
+    m_pUpdateButton->setTitleFontSize(32 * contentScale);
+    m_pUpdateButton->setTitleText("Update");
+    m_pUpdateButton->setScale9Enabled(true);
+    m_pUpdateButton->setVisible(false);
+    m_pUpdateButton->setContentSize(Size(300, m_pUpdateButton->getContentSize().height));
+    m_pUpdateButton->setColor(Color3B(197, 35, 20));
+    m_pUpdateButton->setTitleColor(Color3B::WHITE);
+    m_pUpdateButton->setAnchorPoint(Vec2(0.5f, 0));
+    m_pUpdateButton->setPosition(Vec2(messageBox->getContentSize().width / 2, 20));
+    m_pUpdateButton->addTouchEventListener(CC_CALLBACK_2(KillSwitch::onButtonPress, this));
+    
+    messageBox->addChild(m_pUpdateButton);
+    
     Scene * pCurrentScene = Director::getInstance()->getRunningScene();
     pCurrentScene->addChild(m_pMessageLayer, 100);
     
@@ -202,33 +221,57 @@ void KillSwitch::createMessageLayer()
     backingLayer->runAction(FadeTo::create(0.2, 196));
 }
 
-void KillSwitch::showMessage(const std::string &p_sMessage)
+void KillSwitch::showMessage(const std::string &p_sMessage, bool p_bShowUpdate)
 {
     
     auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
     auto loadingLabel = messageBox->getChildByTag(LOADINGLABEL_TAG);
     auto messageLabel = (Label*)messageBox->getChildByTag(MESSAGELABEL_TAG);
-    auto okButton = messageBox->getChildByTag(OKBUTTON_TAG);
+    auto okButton = (Button*)messageBox->getChildByTag(OKBUTTON_TAG);
     
     messageLabel->setString(p_sMessage);
     Size newSize = Size(messageLabel->getContentSize().width + 20, messageLabel->getContentSize().height + okButton->getContentSize().height + 40);
     
     messageLabel->setPosition(Vec2(newSize.width / 2, newSize.height / 2 + okButton->getContentSize().height - 40));
-    okButton->setPosition(Vec2(newSize.width / 2, 20));
+    
+    auto hideLoading    = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeOut::create(0.2));
+    auto showMessage    = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeIn::create(0.2));
+    auto showOkBtn      = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeIn::create(0.2));
+    
+    if (p_bShowUpdate)
+    {
+        m_pUpdateButton->setVisible(true);
+        m_pUpdateButton->setOpacity(0);
+        m_pUpdateButton->runAction(showOkBtn->clone());
+        
+        m_pUpdateButton->setPosition(Vec2(newSize.width * 0.25f, 20));
+        okButton->setPosition(Vec2(newSize.width * 0.75f, 20));
+        okButton->setTitleText("Later");
+    }
+    else
+    {
+        okButton->setPosition(Vec2(newSize.width / 2, 20));
+    }
     
     messageLabel->setOpacity(0);
     okButton->setOpacity(0);
     messageLabel->setVisible(true);
     okButton->setVisible(true);
     
-    auto hideLoading = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeOut::create(0.2));
-    auto showMessage = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeIn::create(0.2));
-    auto showOkBtn   = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeIn::create(0.2));
-    
     messageBox->runAction(ActionTween::create(0.2, "height", messageBox->getContentSize().height, newSize.height));
     loadingLabel->runAction(hideLoading);
     messageLabel->runAction(showMessage);
     okButton->runAction(showOkBtn);
+}
+
+void KillSwitch::hideMessageLayer()
+{
+    if(m_pMessageLayer != nullptr)
+    {
+        //
+        auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
+        messageBox->runAction(getHideAction());
+    }
 }
 
 void KillSwitch::flipKillSwitch()
@@ -250,22 +293,49 @@ void KillSwitch::flipKillSwitch()
 #endif
 }
 
-void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::TouchEventType type)
+Sequence * KillSwitch::getHideAction()
 {
-    if(type != Widget::TouchEventType::ENDED) return;
-    
     auto scaleSequence = Sequence::createWithTwoActions(ScaleTo::create(0.1, 1.2, 1.2), ScaleTo::create(0.2, 0, 0));
     auto removeLayer = CallFunc::create( CC_CALLBACK_0(Layer::removeFromParentAndCleanup,m_pMessageLayer,true));
     auto sequence = Sequence::createWithTwoActions(scaleSequence, removeLayer);
     
+    return sequence;
+}
+
+void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::TouchEventType type)
+{
+    if(type != Widget::TouchEventType::ENDED) return;
+    
+    Action * sequence = nullptr;
+    
     if (m_bMaintenanceMode || m_iAppVersionMin > getBuildNumber())
     {
         // Flip the switch
-        sequence = Sequence::createWithTwoActions(sequence, CallFunc::create(std::bind(&KillSwitch::flipKillSwitch, this)));
+        sequence = Sequence::createWithTwoActions(getHideAction(), CallFunc::create(std::bind(&KillSwitch::flipKillSwitch, this)));
+    }
+    else
+    {
+        if (pSender == m_pUpdateButton)
+        {
+            Application::getInstance()->openURL("https://itunes.apple.com/app/id555523050?ls=1&mt=8");//m_sAppUpdateLink);
+        }
+        
+        // App OK
+        if(m_successFunction != nullptr)
+        {
+            sequence = Sequence::createWithTwoActions(DelayTime::create(0.5f), CallFunc::create(m_successFunction));
+        }
+        else // no on success message, so just hide the message layer
+        {
+            sequence = getHideAction();
+        }
     }
     
-    auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
-    messageBox->runAction(sequence);
+    if(sequence != nullptr)
+    {
+        auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
+        messageBox->runAction(sequence);
+    }
 }
 
 void KillSwitch::onHttpRequestCompleted(HttpClient *sender, HttpResponse *response)
