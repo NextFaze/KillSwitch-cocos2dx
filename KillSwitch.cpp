@@ -12,7 +12,7 @@
 #include "KillSwitch.h"
 
 #define SECONDS_IN_HOUR     60 * 60
-#define HOURS_UNTIL_RECHECK 2 //* SECONDS_IN_HOUR
+#define HOURS_UNTIL_RECHECK 2 * SECONDS_IN_HOUR
 
 #define MESSAGEBOX_TAG      1
 #define LOADINGLABEL_TAG    2
@@ -36,17 +36,18 @@ KillSwitch::KillSwitch()
     
     m_pMessageLayer = NULL;
     
-    m_successFunction = nullptr;
+    m_onCompletionFunction = nullptr;
 }
 
 KillSwitch::~KillSwitch()
 {
 }
 
-void KillSwitch::loadConfig(const std::string &p_sConfigURL, const std::function<void()> &p_successFunction)
+void KillSwitch::loadConfig(const std::string &p_sConfigURL, cocos2d::Node * p_pNode, const std::function<void()> &p_onCompletionFunction)
 {
     m_sConfigURL = p_sConfigURL;
-    m_successFunction = p_successFunction;
+    m_onCompletionFunction = p_onCompletionFunction;
+    m_pNode = p_pNode;
     
     downloadConfig();
 }
@@ -88,7 +89,7 @@ void KillSwitch::downloadConfig()
         {
             CCLOG("Using local config");
          
-            m_pMessageLayer->runAction(Sequence::createWithTwoActions(DelayTime::create(1), CallFunc::create(std::bind(&KillSwitch::parseConfig, this))));
+            m_pMessageLayer->runAction(Sequence::createWithTwoActions(DelayTime::create(0.5f), CallFunc::create(std::bind(&KillSwitch::parseConfig, this))));
         }
     }
 }
@@ -138,7 +139,8 @@ void KillSwitch::checkConfig()
 
 void KillSwitch::createMessageLayer()
 {
-   
+    if(m_pNode == nullptr) return; // Need to have a root node to display message on
+    
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
     float contentScale = 1 / Director::getInstance()->getContentScaleFactor();
@@ -209,8 +211,7 @@ void KillSwitch::createMessageLayer()
     
     messageBox->addChild(m_pUpdateButton);
     
-    Scene * pCurrentScene = Director::getInstance()->getRunningScene();
-    pCurrentScene->addChild(m_pMessageLayer, 100);
+    m_pNode->addChild(m_pMessageLayer, 100);
     
     messageBox->setContentSize(Size(loadingLabel->getContentSize().width + 20, loadingLabel->getContentSize().height + 20));
     
@@ -223,6 +224,7 @@ void KillSwitch::createMessageLayer()
 
 void KillSwitch::showMessage(const std::string &p_sMessage, bool p_bShowUpdate)
 {
+    if(m_pMessageLayer == nullptr) return;
     
     auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
     auto loadingLabel = messageBox->getChildByTag(LOADINGLABEL_TAG);
@@ -307,8 +309,9 @@ void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::Touch
     if(type != Widget::TouchEventType::ENDED) return;
     
     Action * sequence = nullptr;
+    bool shouldFlipKillswitch = m_bMaintenanceMode || m_iAppVersionMin > getBuildNumber();
     
-    if (m_bMaintenanceMode || m_iAppVersionMin > getBuildNumber())
+    if (shouldFlipKillswitch)
     {
         // Flip the switch
         sequence = Sequence::createWithTwoActions(getHideAction(), CallFunc::create(std::bind(&KillSwitch::flipKillSwitch, this)));
@@ -317,13 +320,14 @@ void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::Touch
     {
         if (pSender == m_pUpdateButton)
         {
-            Application::getInstance()->openURL("https://itunes.apple.com/app/id555523050?ls=1&mt=8");//m_sAppUpdateLink);
+            Application::getInstance()->openURL(m_sAppUpdateLink);
         }
         
         // App OK
-        if(m_successFunction != nullptr)
+        if (m_onCompletionFunction != nullptr)
         {
-            sequence = Sequence::createWithTwoActions(DelayTime::create(0.5f), CallFunc::create(m_successFunction));
+            sequence = CallFunc::create(m_onCompletionFunction);
+            //sequence = Sequence::createWithTwoActions(DelayTime::create(0.5f), CallFunc::create(m_successFunction));
         }
         else // no on success message, so just hide the message layer
         {
@@ -331,10 +335,17 @@ void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::Touch
         }
     }
     
-    if(sequence != nullptr)
+    if(sequence != nullptr && m_pMessageLayer != nullptr)
     {
         auto messageBox = m_pMessageLayer->getChildByTag(MESSAGEBOX_TAG);
         messageBox->runAction(sequence);
+    }
+    else
+    {
+        if (shouldFlipKillswitch)
+            flipKillSwitch();
+        else if (m_onCompletionFunction != nullptr)
+            m_onCompletionFunction();
     }
 }
 

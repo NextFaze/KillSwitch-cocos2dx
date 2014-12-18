@@ -33,7 +33,7 @@ public:
         return instance;
     }
     
-    void loadConfig(const std::string& p_sConfigURL, const std::function<void()> &p_successFunction = nullptr);
+    void loadConfig(const std::string& p_sConfigURL, cocos2d::Node * p_pNode, const std::function<void()> &p_onCompletionFunction = nullptr);
     void hideMessageLayer();
     
 private:
@@ -43,7 +43,7 @@ private:
     std::string m_sAppUpdateLink;
     std::string m_sMaintenanceMessage;
     
-    std::function<void()> m_successFunction;
+    std::function<void()> m_onCompletionFunction;
     
     int         m_iAppVersionCurrent;
     int         m_iAppVersionMin;
@@ -53,6 +53,7 @@ private:
     
     ModalLayer          *   m_pMessageLayer;
     cocos2d::ui::Button *   m_pUpdateButton;
+    cocos2d::Node       *   m_pNode;
     
     KillSwitch();
     // Dont forget to declare these two. You want to make sure they
