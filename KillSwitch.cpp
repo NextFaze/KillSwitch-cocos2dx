@@ -54,6 +54,7 @@ void KillSwitch::loadConfig(const std::string &p_sConfigURL, cocos2d::Node * p_p
 
 void KillSwitch::downloadConfig()
 {
+    CCLOG("Checking current config");
     if(!m_bConfigLoading)
     {
         m_bConfigLoading = true;
@@ -131,6 +132,8 @@ void KillSwitch::checkConfig()
     
     CCLOG("%s", messageStream.str().c_str());
     
+    m_bConfigLoading = false;
+    
     if(message.length() > 0)
         showMessage(message, isUpdateAvailable);
     else
@@ -150,7 +153,7 @@ void KillSwitch::createMessageLayer()
     m_pMessageLayer->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
     
     auto backingLayer = LayerColor::create(Color4B(64, 64, 64, 0));
-    backingLayer->setPosition(Vec2(-visibleSize.width / 2 + origin.x, -visibleSize.height / 2 + origin.y));
+    backingLayer->setPosition(Vec2(-visibleSize.width / 2, -visibleSize.height / 2));//Vec2(-visibleSize.width / 2 + origin.x, -visibleSize.height / 2 + origin.y));
     m_pMessageLayer->addChild(backingLayer);
     
     auto messageBox = Scale9Sprite::create("MessageBox.png");
@@ -351,8 +354,6 @@ void KillSwitch::onButtonPress(cocos2d::Ref *pSender, cocos2d::ui::Widget::Touch
 
 void KillSwitch::onHttpRequestCompleted(HttpClient *sender, HttpResponse *response)
 {
-    m_bConfigLoading = false;
-    
     if (response && response->isSucceed())
     {
         // You can get original request type from: response->request->reqType
