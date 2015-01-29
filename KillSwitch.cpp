@@ -433,16 +433,7 @@ void KillSwitch::onHttpRequestCompleted(HttpClient *sender, HttpResponse *respon
 void KillSwitch::parseConfig()
 {
     std::string fullPath = FileUtils::getInstance()->getWritablePath() + kLocalConfigFileName;
-    ssize_t bufferSize = 0;
-    const char* mFileData = (const char*)FileUtils::getInstance()->getFileData(fullPath.c_str(), "r", &bufferSize);
-    
-    std::string json(mFileData);
-    size_t strLength = json.length();
-    
-    if(bufferSize < strLength)
-    {
-        json = json.substr(0, bufferSize);
-    }
+    std::string json = FileUtils::getInstance()->getStringFromFile(fullPath);
 
     m_jsonConfig.Parse<0>(json.c_str());
     

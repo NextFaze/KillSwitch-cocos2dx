@@ -63,3 +63,21 @@ std::string KillSwitch::getAppName()
     
     return appName;
 }
+
+std::string KillSwitch::getAppBundleId()
+{
+    std::string bundleId = "";
+    
+    JniMethodInfo t;
+ 
+	if (JniHelper::getStaticMethodInfo(t,"com/nextfaze/KillSwitch","getAppBundleId","()Ljava/lang/String;")) 
+	{
+		jstring s = (jstring)t.env->CallStaticObjectMethod(t.classID, t.methodID);
+		t.env->DeleteLocalRef(t.classID);
+		
+		
+        bundleId = JniHelper::jstring2string(s);	
+	}
+    
+    return bundleId;
+}

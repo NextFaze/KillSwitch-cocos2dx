@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#include "KillSwitch.h"
+#include "../KillSwitch/KillSwitch.h"
 
 int KillSwitch::getBuildNumber()
 {
@@ -50,4 +50,18 @@ std::string KillSwitch::getAppName()
     }
     
     return appName;
+}
+
+std::string KillSwitch::getAppBundleId()
+{
+    std::string bundleId = "";
+    
+    NSString * nsBundleId = [[NSBundle mainBundle] bundleIdentifier];
+    
+    if(nsBundleId != nil)
+    {
+        bundleId = [nsBundleId UTF8String];
+    }
+    
+    return bundleId;
 }

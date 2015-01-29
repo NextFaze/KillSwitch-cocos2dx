@@ -23,6 +23,7 @@ public:
     int getBuildNumber();
     std::string getVersionNumber();
     std::string getAppName();
+    std::string getAppBundleId();
     
     ~KillSwitch();
     

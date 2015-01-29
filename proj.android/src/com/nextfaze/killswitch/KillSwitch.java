@@ -35,6 +35,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 
+import me.bananafist.bithacker.BuildConfig;
+
 public class KillSwitch {
 	public static Context mContext = null;
 	
@@ -84,4 +86,8 @@ public class KillSwitch {
 		
 		return appName;
 	}
+
+    public static String getAppBundleId() {
+        return BuildConfig.APPLICATION_ID;
+    }
 }
