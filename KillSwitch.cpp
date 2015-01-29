@@ -11,6 +11,8 @@
 
 #include "KillSwitch.h"
 
+#include "ActionTweenScale9Sprite.h"
+
 #define SECONDS_IN_HOUR     60 * 60
 #define HOURS_UNTIL_RECHECK 2 * SECONDS_IN_HOUR
 
@@ -156,7 +158,7 @@ void KillSwitch::createMessageLayer()
     backingLayer->setPosition(Vec2(-visibleSize.width / 2, -visibleSize.height / 2));//Vec2(-visibleSize.width / 2 + origin.x, -visibleSize.height / 2 + origin.y));
     m_pMessageLayer->addChild(backingLayer);
     
-    auto messageBox = Scale9Sprite::create("MessageBox.png");
+    auto messageBox = ActionTweenScale9Sprite::create("MessageBox.png");
     messageBox->setContentSize(Size(visibleSize.width * 0.95f, 400));
     messageBox->setTag(MESSAGEBOX_TAG);
     
