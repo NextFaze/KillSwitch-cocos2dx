@@ -76,7 +76,7 @@ std::string KillSwitch::getAppBundleId()
 		t.env->DeleteLocalRef(t.classID);
 		
 		
-        bundleId = JniHelper::jstring2string(s);	
+		bundleId = JniHelper::jstring2string(s);	
 	}
     
     return bundleId;
