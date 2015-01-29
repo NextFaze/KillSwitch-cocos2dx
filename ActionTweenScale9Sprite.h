@@ -18,7 +18,7 @@ public:
     
     static ActionTweenScale9Sprite* create(const std::string& file);
     
-    void updateTweenAction(float value, const std::string& key);
+    virtual void updateTweenAction(float value, const std::string& key) override;
 };
 
 #endif /* defined(__BitHacker__ActionTweenScale9Sprite__) */
