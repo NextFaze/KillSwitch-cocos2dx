@@ -8,6 +8,8 @@
 
 #include <fstream>
 #include <sys/stat.h>
+#include <string>
+#include <sstream>
 
 #include "KillSwitch.h"
 
@@ -26,6 +28,14 @@ using namespace cocos2d::ui;
 using namespace cocos2d::network;
 
 static const std::string kLocalConfigFileName = "killSwitch.config";
+
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os;
+    os << value ;
+    return os.str() ;
+}
 
 KillSwitch::KillSwitch()
 {
@@ -59,13 +69,18 @@ void KillSwitch::downloadConfig()
     CCLOG("Checking current config");
     if(!m_bConfigLoading)
     {
-        m_bConfigLoading = true;
-        createMessageLayer();
         
         std::string fullPath = FileUtils::getInstance()->getWritablePath() + kLocalConfigFileName;
         bool haveLocalConfig = FileUtils::getInstance()->isFileExist(fullPath);
         double seconds = 0;
         
+        // Quick check if there is even a config set up for us yet
+        if (haveLocalConfig == false && m_sConfigURL.length() <= 0) {
+            return;
+        }
+        
+        m_bConfigLoading = true;
+        createMessageLayer();
         if(haveLocalConfig)
         {
             struct stat attrib;
@@ -124,11 +139,11 @@ void KillSwitch::checkConfig()
     
     std::ostringstream messageStream;
     messageStream <<  "Killswitch v0.1\n" <<
-    "App Current Build: " << std::to_string(getBuildNumber()) + "\n" <<
+    "App Current Build: " << to_string(getBuildNumber()) + "\n" <<
     "Config URL: " << m_sConfigURL << "\n" <<
     "App Update Link: " << m_sAppUpdateLink << "\n" <<
-    "App Latest Version: " << std::to_string(m_iAppVersionCurrent) << "\n" <<
-    "App Minimum Version: " << std::to_string(m_iAppVersionCurrent) << "\n" <<
+    "App Latest Version: " << to_string(m_iAppVersionCurrent) << "\n" <<
+    "App Minimum Version: " << to_string(m_iAppVersionCurrent) << "\n" <<
     std::boolalpha << "\n \nMaintenance Mode: " << m_bMaintenanceMode << "\n" <<
     "Maintenance Message:\n \n" << m_sMaintenanceMessage;
     
@@ -174,8 +189,8 @@ void KillSwitch::createMessageLayer()
     messageBox->addChild(loadingLabel);
     
     auto messageLabel = Label::createWithTTF("", "GeosansLight.ttf", 32 * contentScale);
-    messageLabel->setAlignment(TextHAlignment::CENTER, TextVAlignment::CENTER);
-    messageLabel->setPosition(Vec2(messageBox->getContentSize().width / 2, messageBox->getContentSize().height / 2));
+    messageLabel->setAlignment(TextHAlignment::CENTER, TextVAlignment::TOP);
+    messageLabel->setPosition(Vec2(messageBox->getContentSize().width / 2, 10));
     messageLabel->setDimensions(messageBox->getContentSize().width - 20, 0);
     messageLabel->setTextColor(Color4B::WHITE);
     messageLabel->setVisible(false);
@@ -239,7 +254,7 @@ void KillSwitch::showMessage(const std::string &p_sMessage, bool p_bShowUpdate)
     messageLabel->setString(p_sMessage);
     Size newSize = Size(messageLabel->getContentSize().width + 20, messageLabel->getContentSize().height + okButton->getContentSize().height + 40);
     
-    messageLabel->setPosition(Vec2(newSize.width / 2, newSize.height / 2 + okButton->getContentSize().height - 40));
+    messageLabel->setPosition(Vec2(newSize.width / 2, newSize.height - messageLabel->getContentSize().height / 2 - 10));
     
     auto hideLoading    = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeOut::create(0.2));
     auto showMessage    = Sequence::createWithTwoActions(DelayTime::create(0.1), FadeIn::create(0.2));
