@@ -55,7 +55,7 @@ public class KillSwitch {
 		return build;
 	}
 	
-	public static String getBuildVersion() {
+	public static String getVersion() {
 		String version = "";
 		
 		try {

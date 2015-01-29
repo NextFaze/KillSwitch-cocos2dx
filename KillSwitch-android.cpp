@@ -28,13 +28,13 @@ int KillSwitch::getBuildNumber()
     return buildNumber;
 }
 
-std::string KillSwitch::getVersionNumber()
+std::string KillSwitch::getVersion()
 {
     std::string version = "0";
     
     JniMethodInfo t;
  
-	if (JniHelper::getStaticMethodInfo(t,"com/nextfaze/KillSwitch","getVersionNumber","()Ljava/lang/String;")) 
+	if (JniHelper::getStaticMethodInfo(t,"com/nextfaze/KillSwitch","getVersion","()Ljava/lang/String;")) 
 	{
 		jstring s = (jstring)t.env->CallStaticObjectMethod(t.classID, t.methodID);
 		t.env->DeleteLocalRef(t.classID);

@@ -21,7 +21,7 @@ class KillSwitch
 public:
     
     int getBuildNumber();
-    std::string getVersionNumber();
+    std::string getVersion();
     std::string getAppName();
     std::string getAppBundleId();
     

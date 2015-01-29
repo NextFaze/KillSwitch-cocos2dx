@@ -24,7 +24,7 @@ int KillSwitch::getBuildNumber()
     return buildNumber;
 }
 
-std::string KillSwitch::getVersionNumber()
+std::string KillSwitch::getVersion()
 {
     std::string version = "0";
     
